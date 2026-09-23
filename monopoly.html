@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monopoly — Mini Game</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0b1110;
+      --panel: #151d1b;
+      --panel-light: #1e2926;
+      --gold: #f4c95d;
+      --text: #f5f5f0;
+      --muted: #9daaa5;
+      --board: #d9e4c7;
+      --green: #174c38;
+      --red: #ef4d4d;
+      --blue: #4388ff;
+      --shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    body {
+      min-height: 100vh;
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(102, 67, 31, 0.3), transparent 30%),
+        radial-gradient(circle at 90% 90%, rgba(20, 85, 58, 0.2), transparent 35%),
+        linear-gradient(135deg, #090d0c, #18201d 50%, #0a0f0e);
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app {
+      width: min(1400px, 100%);
+      min-height: 100vh;
+      margin: auto;
+      padding: 28px;
+
+      display: grid;
+      grid-template-columns: minmax(500px, 1fr) 330px;
+      gap: 28px;
+      align-items: center;
+    }
+
+    /* =====================================================
+       GAME AREA
+    ===================================================== */
+
+    .game-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .game-header {
+      width: min(850px, 100%);
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .title-area h1 {
+      color: var(--gold);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(28px, 4vw, 48px);
+      letter-spacing: 0.06em;
+      text-shadow: 0 3px 15px rgba(244, 201, 93, 0.2);
+    }
+
+    .title-area p {
+      color: var(--muted);
+      margin-top: 4px;
+      font-size: 13px;
+    }
+
+    .turn-display {
+      padding: 10px 15px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #dce7e1;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .turn-display::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: #43e47e;
+      box-shadow: 0 0 12px #43e47e;
+    }
+
+    /* =====================================================
+       BOARD
+    ===================================================== */
+
+    .board-frame {
+      width: min(850px, 100%);
+      aspect-ratio: 1;
+
+      padding: 13px;
+      border-radius: 26px;
+
+      background:
+        linear-gradient(145deg, #815029, #321b0e 45%, #6a3d1d);
+
+      box-shadow: var(--shadow);
+    }
+
+    .board {
+      position: relative;
+      width: 100%;
+      height: 100%;
+
+      display: grid;
+      grid-template-columns: repeat(11, 1fr);
+      grid-template-rows: repeat(11, 1fr);
+
+      background: #17231e;
+      border: 3px solid #080a09;
+      border-radius: 13px;
+      overflow: hidden;
+    }
+
+    .square {
+      position: relative;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+
+      min-width: 0;
+      min-height: 0;
+      padding: 4px;
+
+      color: #171b18;
+      background: #f2ecd8;
+
+      border: 1px solid #30342e;
+
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .square-color {
+      width: 100%;
+      height: 24%;
+      min-height: 5px;
+      flex-shrink: 0;
+    }
+
+    .square-name {
+      flex: 1;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      font-size: clamp(6px, 0.75vw, 10px);
+      line-height: 1.05;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .square-price {
+      font-size: clamp(5px, 0.65vw, 9px);
+      color: #59605b;
+      font-weight: 700;
+    }
+
+    .corner {
+      background: linear-gradient(145deg, #f8f3df, #d9d2b8);
+    }
+
+    .corner-icon {
+      font-size: clamp(12px, 1.7vw, 24px);
+      margin-top: 2px;
+    }
+
+    .special {
+      background: linear-gradient(145deg, #f6f2df, #ded8c1);
+    }
+
+    .special-icon {
+      font-size: clamp(12px, 1.6vw, 22px);
+      margin-top: 3px;
+    }
+
+    /* Property group colors */
+    .brown {
+      background: #eadfd0;
+    }
+
+    .brown .square-color {
+      background: #8b543e;
+    }
+
+    .light-blue {
+      background: #e2f0f1;
+    }
+
+    .light-blue .square-color {
+      background: #79cbdc;
+    }
+
+    .pink {
+      background: #f2dfe9;
+    }
+
+    .pink .square-color {
+      background: #cf4e8b;
+    }
+
+    .orange {
+      background: #f4e2cd;
+    }
+
+    .orange .square-color {
+      background: #df8b35;
+    }
+
+    .red {
+      background: #f2d9d7;
+    }
+
+    .red .square-color {
+      background: #d84444;
+    }
+
+    .yellow {
+      background: #f4edd2;
+    }
+
+    .yellow .square-color {
+      background: #e8ca38;
+    }
+
+    .green-property {
+      background: #dcebdd;
+    }
+
+    .green-property .square-color {
+      background: #38985b;
+    }
+
+    .dark-blue {
+      background: #dce4f2;
+    }
+
+    .dark-blue .square-color {
+      background: #3c5fbd;
+    }
+
+    /* =====================================================
+       CENTER CONTROLS
+    ===================================================== */
+
+    .board-center {
+      grid-column: 2 / 11;
+      grid-row: 2 / 11;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      background:
+        radial-gradient(
+          circle at center,
+          rgba(56, 138, 91, 0.18),
+          transparent 55%
+        ),
+        linear-gradient(145deg, #183126, #0d1813);
+
+      border: 2px solid #0a0e0c;
+    }
+
+    .board-center::before {
+      content: "";
+
+      position: absolute;
+      width: 65%;
+      height: 65%;
+
+      border: 2px solid rgba(244, 201, 93, 0.2);
+      border-radius: 20px;
+
+      pointer-events: none;
+    }
+
+    .monopoly-title {
+      position: relative;
+      z-index: 2;
+
+      color: var(--gold);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(22px, 4.5vw, 62px);
+      font-weight: 900;
+      letter-spacing: 0.07em;
+
+      text-shadow:
+        0 3px 0 #785514,
+        0 8px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .center-subtitle {
+      position: relative;
+      z-index: 2;
+
+      margin-top: -4px;
+      margin-bottom: 25px;
+
+      color: #91a59a;
+      font-size: clamp(7px, 0.9vw, 11px);
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+    }
+
+    .dice-result {
+      position: relative;
+      z-index: 2;
+
+      min-height: 100px;
+
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      justify-content: center;
+    }
+
+    .die {
+      width: clamp(44px, 6vw, 70px);
+      height: clamp(44px, 6vw, 70px);
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 13px;
+
+      color: #171b19;
+      background: linear-gradient(145deg, #ffffff, #d7ded9);
+
+      font-size: clamp(18px, 2.5vw, 30px);
+      font-weight: 900;
+
+      box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.9);
+    }
+
+    .dice-total {
+      position: relative;
+      z-index: 2;
+
+      margin-top: 7px;
+
+      color: #aebdb4;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    #rollDiceButton {
+      position: relative;
+      z-index: 2;
+
+      margin-top: 20px;
+
+      padding: 13px 30px;
+
+      border: none;
+      border-radius: 999px;
+
+      color: #14170f;
+      background: linear-gradient(135deg, #ffe37c, #dfb535);
+
+      font-weight: 900;
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+
+      cursor: pointer;
+
+      box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.35),
+        0 0 25px rgba(244, 201, 93, 0.15);
+
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+    }
+
+    #rollDiceButton:hover {
+      transform: translateY(-3px);
+      box-shadow:
+        0 14px 30px rgba(0, 0, 0, 0.4),
+        0 0 30px rgba(244, 201, 93, 0.3);
+    }
+
+    #rollDiceButton:active {
+      transform: translateY(0);
+    }
+
+    #rollDiceButton:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    /* =====================================================
+       PLAYER TOKENS
+    ===================================================== */
+
+    .player-token {
+      position: absolute;
+      z-index: 50;
+
+      width: clamp(18px, 2.4vw, 30px);
+      height: clamp(18px, 2.4vw, 30px);
+
+      display: grid;
+      place-items: center;
+
+      border: 2px solid white;
+      border-radius: 50%;
+
+      color: white;
+      font-size: clamp(7px, 0.8vw, 10px);
+      font-weight: 900;
+
+      box-shadow:
+        0 5px 12px rgba(0, 0, 0, 0.5),
+        inset 0 2px 3px rgba(255, 255, 255, 0.4);
+
+      pointer-events: none;
+
+      transition:
+        left 0.45s ease,
+        top 0.45s ease;
+    }
+
+    .player-token.player-1 {
+      background: linear-gradient(145deg, #ff6868, #b51d29);
+    }
+
+    .player-token.player-2 {
+      background: linear-gradient(145deg, #5ca2ff, #164bb8);
+    }
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+    .sidebar {
+      height: min(780px, 90vh);
+
+      display: flex;
+      flex-direction: column;
+
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 22px;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(31, 42, 38, 0.97),
+          rgba(15, 21, 19, 0.97)
+        );
+
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 23px 20px;
+
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .sidebar-header h2 {
+      font-size: 19px;
+    }
+
+    .sidebar-header p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .players {
+      padding: 15px;
+
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .player-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      padding: 12px;
+
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 15px;
+
+      background: rgba(255, 255, 255, 0.035);
+
+      transition:
+        border-color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .player-card.active {
+      border-color: rgba(67, 228, 126, 0.4);
+      background: rgba(67, 228, 126, 0.045);
+    }
+
+    .player-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .avatar {
+      width: 47px;
+      height: 47px;
+
+      flex-shrink: 0;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 14px;
+
+      font-size: 23px;
+
+      background: linear-gradient(145deg, #9b3338, #52151b);
+    }
+
+    .player-two .avatar {
+      background: linear-gradient(145deg, #3975d7, #17386d);
+    }
+
+    .player-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .player-name {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .player-money {
+      margin-top: 5px;
+      color: #6ee99b;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .player-state {
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .log-wrapper {
+      min-height: 0;
+      flex: 1;
+
+      margin: 0 15px 15px;
+
+      display: flex;
+      flex-direction: column;
+
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+
+      background: rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .log-title {
+      padding: 13px 14px;
+
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .live {
+      color: #65e494;
+      font-size: 9px;
+      text-transform: uppercase;
+    }
+
+    .live::before {
+      content: "";
+      display: inline-block;
+
+      width: 6px;
+      height: 6px;
+      margin-right: 5px;
+
+      border-radius: 50%;
+      background: #65e494;
+      box-shadow: 0 0 8px #65e494;
+    }
+
+    #gameLog {
+      flex: 1;
+
+      overflow-y: auto;
+      padding: 8px 13px 14px;
+
+      scrollbar-width: thin;
+      scrollbar-color: #43514b transparent;
+    }
+
+    .log-entry {
+      padding: 9px 0;
+
+      border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+
+      color: #c1cbc5;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .log-time {
+      display: block;
+
+      margin-bottom: 2px;
+
+      color: #697770;
+      font-size: 9px;
+    }
+
+    .log-entry strong {
+      color: white;
+    }
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+
+    @media (max-width: 1050px) {
+      .app {
+        grid-template-columns: 1fr;
+        max-width: 900px;
+      }
+
+      .sidebar {
+        height: 430px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .app {
+        padding: 12px;
+      }
+
+      .game-header {
+        align-items: flex-start;
+      }
+
+      .turn-display {
+        font-size: 10px;
+      }
+
+      .board-frame {
+        padding: 7px;
+        border-radius: 17px;
+      }
+
+      .board {
+        border-radius: 8px;
+      }
+
+      .board-center {
+        padding: 8px;
+      }
+
+      .center-subtitle {
+        margin-bottom: 8px;
+        letter-spacing: 0.08em;
+      }
+
+      #rollDiceButton {
+        margin-top: 8px;
+        padding: 9px 17px;
+        font-size: 10px;
+      }
+
+      .sidebar {
+        height: 500px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="app">
+
+    <!-- ===================================================
+         GAME AREA
+    ==================================================== -->
+
+    <section class="game-area">
+
+      <header class="game-header">
+        <div class="title-area">
+          <h1>MONOPOLY</h1>
+          <p>Property Trading Game</p>
+        </div>
+
+        <div id="turnDisplay" class="turn-display">
+          Player 1's Turn
+        </div>
+      </header>
+
+
+      <div class="board-frame">
+
+        <!--
+          JavaScript dynamically creates:
+          - 40 board squares
+          - center controls
+          - player tokens
+        -->
+        <div id="gameBoard" class="board"></div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ===================================================
+         SIDEBAR
+    ==================================================== -->
+
+    <aside class="sidebar">
+
+      <header class="sidebar-header">
+        <h2>Game Dashboard</h2>
+        <p>Players, dice and game activity</p>
+      </header>
+
+
+      <section class="players">
+
+        <article id="player1Card" class="player-card active">
+
+          <div class="avatar">🔴</div>
+
+          <div class="player-info">
+            <div class="player-name">Player 1</div>
+            <div id="player1State" class="player-state">
+              Your Turn
+            </div>
+            <div class="player-money">$1,500</div>
+          </div>
+
+        </article>
+
+
+        <article id="player2Card" class="player-card player-two">
+
+          <div class="avatar">🔵</div>
+
+          <div class="player-info">
+            <div class="player-name">Player 2</div>
+            <div id="player2State" class="player-state">
+              Waiting
+            </div>
+            <div class="player-money">$1,500</div>
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <section class="log-wrapper">
+
+        <header class="log-title">
+          <span>Game Log</span>
+          <span class="live">Live</span>
+        </header>
+
+        <div id="gameLog">
+
+          <div class="log-entry">
+            <span class="log-time">Game Start</span>
+            Welcome to Monopoly.
+          </div>
+
+          <div class="log-entry">
+            <span class="log-time">Game Start</span>
+            <strong>Player 1</strong> and <strong>Player 2</strong>
+            are ready.
+          </div>
+
+          <div class="log-entry">
+            <span class="log-time">Game Start</span>
+            Player 1 starts on <strong>GO</strong>.
+          </div>
+
+        </div>
+
+      </section>
+
+    </aside>
+
+  </main>
+
+
+  <script>
+    /* =========================================================
+       MONOPOLY GAME
+       All game logic is contained in this script.
+       ========================================================= */
+
+
+    /* =========================================================
+       BOARD DATA
+       ========================================================= */
+
+    const boardSpaces = [
+      {
+        name: "GO",
+        type: "corner",
+        icon: "🚀",
+        price: "Collect $200"
+      },
+      {
+        name: "Mediterranean Ave",
+        type: "brown",
+        price: "$60"
+      },
+      {
+        name: "Community Chest",
+        type: "special",
+        icon: "📦",
+        price: "Card"
+      },
+      {
+        name: "Baltic Ave",
+        type: "brown",
+        price: "$60"
+      },
+      {
+        name: "Income Tax",
+        type: "special",
+        icon: "💰",
+        price: "$200"
+      },
+      {
+        name: "Reading Railroad",
+        type: "special",
+        icon: "🚂",
+        price: "$200"
+      },
+      {
+        name: "Oriental Ave",
+        type: "light-blue",
+        price: "$100"
+      },
+      {
+        name: "Chance",
+        type: "special",
+        icon: "❓",
+        price: "Card"
+      },
+      {
+        name: "Vermont Ave",
+        type: "light-blue",
+        price: "$100"
+      },
+      {
+        name: "Connecticut Ave",
+        type: "light-blue",
+        price: "$120"
+      },
+      {
+        name: "Jail",
+        type: "corner",
+        icon: "🔒",
+        price: "Just Visiting"
+      },
+      {
+        name: "St. Charles Place",
+        type: "pink",
+        price: "$140"
+      },
+      {
+        name: "Electric Company",
+        type: "special",
+        icon: "💡",
+        price: "$150"
+      },
+      {
+        name: "States Ave",
+        type: "pink",
+        price: "$140"
+      },
+      {
+        name: "Virginia Ave",
+        type: "pink",
+        price: "$160"
+      },
+      {
+        name: "Pennsylvania Railroad",
+        type: "special",
+        icon: "🚂",
+        price: "$200"
+      },
+      {
+        name: "St. James Place",
+        type: "orange",
+        price: "$180"
+      },
+      {
+        name: "Community Chest",
+        type: "special",
+        icon: "📦",
+        price: "Card"
+      },
+      {
+        name: "Tennessee Ave",
+        type: "orange",
+        price: "$180"
+      },
+      {
+        name: "New York Ave",
+        type: "orange",
+        price: "$200"
+      },
+      {
+        name: "Free Parking",
+        type: "corner",
+        icon: "🅿️",
+        price: "Free"
+      },
+      {
+        name: "Kentucky Ave",
+        type: "red",
+        price: "$220"
+      },
+      {
+        name: "Chance",
+        type: "special",
+        icon: "❓",
+        price: "Card"
+      },
+      {
+        name: "Indiana Ave",
+        type: "red",
+        price: "$220"
+      },
+      {
+        name: "Illinois Ave",
+        type: "red",
+        price: "$240"
+      },
+      {
+        name: "B. & O. Railroad",
+        type: "special",
+        icon: "🚂",
+        price: "$200"
+      },
+      {
+        name: "Atlantic Ave",
+        type: "yellow",
+        price: "$260"
+      },
+      {
+        name: "Ventnor Ave",
+        type: "yellow",
+        price: "$260"
+      },
+      {
+        name: "Water Works",
+        type: "special",
+        icon: "🚿",
+        price: "$150"
+      },
+      {
+        name: "Marvin Gardens",
+        type: "yellow",
+        price: "$280"
+      },
+      {
+        name: "Go To Jail",
+        type: "corner",
+        icon: "🚨",
+        price: "Go directly"
+      },
+      {
+        name: "Pacific Ave",
+        type: "green-property",
+        price: "$300"
+      },
+      {
+        name: "North Carolina Ave",
+        type: "green-property",
+        price: "$300"
+      },
+      {
+        name: "Community Chest",
+        type: "special",
+        icon: "📦",
+        price: "Card"
+      },
+      {
+        name: "Pennsylvania Ave",
+        type: "green-property",
+        price: "$320"
+      },
+      {
+        name: "Short Line",
+        type: "special",
+        icon: "🚂",
+        price: "$200"
+      },
+      {
+        name: "Chance",
+        type: "special",
+        icon: "❓",
+        price: "Card"
+      },
+      {
+        name: "Park Place",
+        type: "dark-blue",
+        price: "$350"
+      },
+      {
+        name: "Luxury Tax",
+        type: "special",
+        icon: "💎",
+        price: "$100"
+      },
+      {
+        name: "Boardwalk",
+        type: "dark-blue",
+        price: "$400"
+      }
+    ];
+
+
+    /* =========================================================
+       CSS GRID COORDINATES
+       
+       The 40 spaces form a clockwise loop around the
+       outside of an 11 × 11 CSS Grid.
+       ========================================================= */
+
+    const gridCoordinates = [
+
+      /* Bottom edge: 0 → 10 */
+      { row: 11, column: 11 }, // 0 GO
+      { row: 11, column: 10 }, // 1
+      { row: 11, column: 9 },  // 2
+      { row: 11, column: 8 },  // 3
+      { row: 11, column: 7 },  // 4
+      { row: 11, column: 6 },  // 5
+      { row: 11, column: 5 },  // 6
+      { row: 11, column: 4 },  // 7
+      { row: 11, column: 3 },  // 8
+      { row: 11, column: 2 },  // 9
+      { row: 11, column: 1 },  // 10 Jail
+
+      /* Left edge: 11 → 20 */
+      { row: 10, column: 1 }, // 11
+      { row: 9, column: 1 },  // 12
+      { row: 8, column: 1 },  // 13
+      { row: 7, column: 1 },  // 14
+      { row: 6, column: 1 },  // 15
+      { row: 5, column: 1 },  // 16
+      { row: 4, column: 1 },  // 17
+      { row: 3, column: 1 },  // 18
+      { row: 2, column: 1 },  // 19
+      { row: 1, column: 1 },  // 20 Free Parking
+
+      /* Top edge: 21 → 30 */
+      { row: 1, column: 2 },  // 21
+      { row: 1, column: 3 },  // 22
+      { row: 1, column: 4 },  // 23
+      { row: 1, column: 5 },  // 24
+      { row: 1, column: 6 },  // 25
+      { row: 1, column: 7 },  // 26
+      { row: 1, column: 8 },  // 27
+      { row: 1, column: 9 },  // 28
+      { row: 1, column: 10 }, // 29
+      { row: 1, column: 11 }, // 30 Go To Jail
+
+      /* Right edge: 31 → 39 */
+      { row: 2, column: 11 },  // 31
+      { row: 3, column: 11 },  // 32
+      { row: 4, column: 11 },  // 33
+      { row: 5, column: 11 },  // 34
+      { row: 6, column: 11 },  // 35
+      { row: 7, column: 11 },  // 36
+      { row: 8, column: 11 },  // 37
+      { row: 9, column: 11 },  // 38
+      { row: 10, column: 11 }  // 39 Boardwalk
+    ];
+
+
+    /* =========================================================
+       GAME STATE
+       ========================================================= */
+
+    const gameState = {
+      currentPlayer: 0,
+
+      players: [
+        {
+          id: 1,
+          name: "Player 1",
+          position: 0,
+          token: null
+        },
+        {
+          id: 2,
+          name: "Player 2",
+          position: 0,
+          token: null
+        }
+      ]
+    };
+
+
+    /* =========================================================
+       DOM REFERENCES
+       ========================================================= */
+
+    const gameBoard = document.getElementById("gameBoard");
+    const turnDisplay = document.getElementById("turnDisplay");
+    const gameLog = document.getElementById("gameLog");
+
+    const player1Card = document.getElementById("player1Card");
+    const player2Card = document.getElementById("player2Card");
+
+    const player1State = document.getElementById("player1State");
+    const player2State = document.getElementById("player2State");
+
+
+    /* =========================================================
+       CREATE BOARD
+       ========================================================= */
+
+    function createBoard() {
+
+      boardSpaces.forEach((space, index) => {
+
+        const square = document.createElement("div");
+
+        square.className = `square ${space.type}`;
+
+        const coordinates = gridCoordinates[index];
+
+        square.style.gridRow = coordinates.row;
+        square.style.gridColumn = coordinates.column;
+
+        square.dataset.position = index;
+
+        /*
+          Property spaces get a colored header.
+        */
+        if (
+          space.type !== "corner" &&
+          space.type !== "special"
+        ) {
+          const color = document.createElement("div");
+
+          color.className = "square-color";
+
+          square.appendChild(color);
+        } else {
+          const icon = document.createElement("div");
+
+          icon.className =
+            space.type === "corner"
+              ? "corner-icon"
+              : "special-icon";
+
+          icon.textContent = space.icon || "";
+
+          square.appendChild(icon);
+        }
+
+        const name = document.createElement("div");
+
+        name.className = "square-name";
+        name.textContent = space.name;
+
+        square.appendChild(name);
+
+        const price = document.createElement("div");
+
+        price.className = "square-price";
+        price.textContent = space.price;
+
+        square.appendChild(price);
+
+        gameBoard.appendChild(square);
+      });
+
+
+      /*
+        Add the center game-control area after generating
+        the 40 outer squares.
+      */
+
+      const center = document.createElement("div");
+
+      center.className = "board-center";
+
+      center.innerHTML = `
+        <div class="monopoly-title">MONOPOLY</div>
+
+        <div class="center-subtitle">
+          Property Trading Game
+        </div>
+
+        <div
+          id="diceResult"
+          class="dice-result"
+          aria-live="polite"
+        >
+          <div class="die">?</div>
+          <div class="die">?</div>
+        </div>
+
+        <div id="diceTotal" class="dice-total">
+          Roll the dice to begin
+        </div>
+
+        <button
+          id="rollDiceButton"
+          type="button"
+        >
+          🎲 Roll Dice
+        </button>
+      `;
+
+      gameBoard.appendChild(center);
+    }
+
+
+    /* =========================================================
+       CREATE PLAYER TOKENS
+       ========================================================= */
+
+    function createPlayerTokens() {
+
+      gameState.players.forEach((player) => {
+
+        const token = document.createElement("div");
+
+        token.className =
+          `player-token player-${player.id}`;
+
+        token.textContent = player.id;
+
+        token.title = player.name;
+
+        gameBoard.appendChild(token);
+
+        player.token = token;
+      });
+    }
+
+
+    /* =========================================================
+       MOVE TOKEN TO A BOARD SPACE
+       ========================================================= */
+
+    function moveToken(player) {
+
+      const coordinates =
+        gridCoordinates[player.position];
+
+      /*
+        Each CSS Grid cell is 1/11 of the board.
+
+        We position the token at the center of the
+        corresponding cell using percentages.
+      */
+
+      const cellSize = 100 / 11;
+
+      const left =
+        (coordinates.column - 1) * cellSize +
+        cellSize / 2;
+
+      const top =
+        (coordinates.row - 1) * cellSize +
+        cellSize / 2;
+
+
+      /*
+        Give players a slight offset when they occupy
+        the same square.
+      */
+
+      let offsetX = 0;
+      let offsetY = 0;
+
+      if (
+        gameState.players[0].position ===
+        gameState.players[1].position
+      ) {
+
+        if (player.id === 1) {
+          offsetX = -10;
+          offsetY = -10;
+        } else {
+          offsetX = 10;
+          offsetY = 10;
+        }
+      }
+
+
+      player.token.style.left =
+        `calc(${left}% + ${offsetX}px)`;
+
+      player.token.style.top =
+        `calc(${top}% + ${offsetY}px)`;
+
+      player.token.style.transform =
+        "translate(-50%, -50%)";
+    }
+
+
+    /* =========================================================
+       ROLL ONE DIE
+       ========================================================= */
+
+    function rollDie() {
+
+      return Math.floor(
+        Math.random() * 6
+      ) + 1;
+    }
+
+
+    /* =========================================================
+       DISPLAY DICE RESULT
+       ========================================================= */
+
+    function displayDice(die1, die2, total) {
+
+      const diceResult =
+        document.getElementById("diceResult");
+
+      const diceTotal =
+        document.getElementById("diceTotal");
+
+
+      diceResult.innerHTML = `
+        <div class="die">${die1}</div>
+        <div class="die">${die2}</div>
+      `;
+
+      diceTotal.textContent =
+        `Total Roll: ${total}`;
+    }
+
+
+    /* =========================================================
+       UPDATE TURN UI
+       ========================================================= */
+
+    function updateTurnUI() {
+
+      const activePlayer =
+        gameState.players[
+          gameState.currentPlayer
+        ];
+
+
+      turnDisplay.textContent =
+        `${activePlayer.name}'s Turn`;
+
+
+      /*
+        Update player card highlighting.
+      */
+
+      player1Card.classList.toggle(
+        "active",
+        gameState.currentPlayer === 0
+      );
+
+      player2Card.classList.toggle(
+        "active",
+        gameState.currentPlayer === 1
+      );
+
+
+      /*
+        Update status labels.
+      */
+
+      player1State.textContent =
+        gameState.currentPlayer === 0
+          ? "Your Turn"
+          : "Waiting";
+
+      player2State.textContent =
+        gameState.currentPlayer === 1
+          ? "Your Turn"
+          : "Waiting";
+    }
+
+
+    /* =========================================================
+       ADD GAME LOG MESSAGE
+       ========================================================= */
+
+    function addGameLog(message) {
+
+      const entry =
+        document.createElement("div");
+
+      entry.className = "log-entry";
+
+
+      const now = new Date();
+
+      const time =
+        now.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+
+
+      entry.innerHTML = `
+        <span class="log-time">${time}</span>
+        ${message}
+      `;
+
+
+      gameLog.appendChild(entry);
+
+      /*
+        Automatically scroll to the newest event.
+      */
+
+      gameLog.scrollTop =
+        gameLog.scrollHeight;
+    }
+
+
+    /* =========================================================
+       HANDLE ROLL
+       ========================================================= */
+
+    function handleRollDice() {
+
+      const player =
+        gameState.players[
+          gameState.currentPlayer
+        ];
+
+
+      /*
+        Roll two six-sided dice.
+      */
+
+      const die1 = rollDie();
+      const die2 = rollDie();
+
+      const total =
+        die1 + die2;
+
+
+      /*
+        Display the dice result.
+      */
+
+      displayDice(
+        die1,
+        die2,
+        total
+      );
+
+
+      /*
+        Move the player.
+
+        `% 40` makes the player loop back to
+        position 0 after position 39.
+      */
+
+      player.position =
+        (player.position + total) % 40;
+
+
+      /*
+        Move the visual token.
+      */
+
+      moveToken(player);
+
+
+      /*
+        Get the destination space name.
+      */
+
+      const destination =
+        boardSpaces[player.position];
+
+
+      /*
+        Add the requested game-log message.
+      */
+
+      addGameLog(
+        `<strong>${player.name}</strong>
+         rolled <strong>${total}</strong>
+         and moved to space
+         <strong>${player.position}</strong>
+         (${destination.name}).`
+      );
+
+
+      /*
+        Switch to the other player.
+      */
+
+      gameState.currentPlayer =
+        (gameState.currentPlayer + 1) %
+        gameState.players.length;
+
+
+      /*
+        Update the sidebar and turn indicator.
+      */
+
+      updateTurnUI();
+    }
+
+
+    /* =========================================================
+       INITIALIZE GAME
+       ========================================================= */
+
+    function initializeGame() {
+
+      /*
+        Generate all 40 board spaces.
+      */
+
+      createBoard();
+
+
+      /*
+        Generate both player tokens.
+      */
+
+      createPlayerTokens();
+
+
+      /*
+        Both players start at GO (index 0).
+      */
+
+      gameState.players.forEach(
+        moveToken
+      );
+
+
+      /*
+        Make sure the UI initially shows
+        Player 1's turn.
+      */
+
+      updateTurnUI();
+
+
+      /*
+        IMPORTANT:
+        The button is created dynamically by createBoard(),
+        so we attach the event listener only AFTER
+        createBoard() has run.
+      */
+
+      const rollDiceButton =
+        document.getElementById(
+          "rollDiceButton"
+        );
+
+
+      rollDiceButton.addEventListener(
+        "click",
+        handleRollDice
+      );
+    }
+
+
+    /* =========================================================
+       START GAME
+       ========================================================= */
+
+    initializeGame();
+
+  </script>
+
+</body>
+</html>
